@@ -10,9 +10,15 @@
 		<link type="text/css" rel="stylesheet" href="main.css" />
 	</head>
 	<body>
-		<div id="container"></div>
 		<div id="info">three.js - museum-demo.</div>
-
+		<div id="menuPanel">
+			<div id="startButton">
+				<span style="font-size:40px">點擊開始</span>
+				<br />
+				<br />
+				(W, A, S, D = 移動, 滑鼠移動 = 移動視角, ESC = 結束)
+			</div>
+		</div>
 		<script type="module">
 			import * as THREE from "../build/three.module.js";
 
@@ -20,6 +26,8 @@
 			import { OrbitControls } from "./jsm/controls/OrbitControls.js";
 			import { RectAreaLightHelper } from "./jsm/helpers/RectAreaLightHelper.js";
 			import { RectAreaLightUniformsLib } from "./jsm/lights/RectAreaLightUniformsLib.js";
+			import { PointerLockControls } from "./jsm/controls/PointerLockControls.js";
+			import Stats  from "./jsm/libs/stats.module.js";
 
 			// shader injection for box projected cube environment mapping
 			const worldposReplace = /* glsl */ `
@@ -198,14 +206,22 @@
 			let cube;
 			init();
 
-			function init() {
-				const container = document.getElementById("container");
+			const menuPanel = document.getElementById('menuPanel');
+			const startButton = document.getElementById('startButton');
+			startButton.addEventListener('click', function () {
+				controls.lock();
+			}, false);
+				
+			const controls = new PointerLockControls(camera, renderer.domElement)
+			controls.addEventListener('lock', () => menuPanel.style.display = 'none');
+			controls.addEventListener('unlock', () => menuPanel.style.display = 'block');
 
+			function init() {
 				// renderer
 				renderer = new THREE.WebGLRenderer({ antialias: true });
 				renderer.setPixelRatio(window.devicePixelRatio);
 				renderer.setSize(WIDTH, HEIGHT);
-				container.appendChild(renderer.domElement);
+				document.body.appendChild(renderer.domElement);
 
 				// gui controls
 				const gui = new GUI();
@@ -229,7 +245,7 @@
 
 				// camera
 				camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
-				camera.position.set(280, 106, -5);
+				camera.position.set(150, 0, 0);
 
 				cameraControls = new OrbitControls(camera, renderer.domElement);
 				cameraControls.target.set(0, -10, 0);
@@ -477,9 +493,39 @@
 				render();
 			}
 
+			const onKeyDown = function (event) {
+				switch (event.key) {
+					case "w":
+						controls.moveForward(3);
+						break;
+					case "a":
+						controls.moveRight(-3);
+						break;
+					case "s":
+						controls.moveForward(-3);
+						break;
+					case "d":
+						controls.moveRight(3);
+						break;
+				}
+			};
+			document.addEventListener('keydown', onKeyDown, false);
+
+			// const stats = Stats()
+			// document.body.appendChild(stats.dom)
+
+			function animate() {
+				requestAnimationFrame(animate)
+				render()
+				// stats.update()
+			};
+
 			function render() {
 				renderer.render(scene, camera);
 			}
+			
+			animate();
+			
 		</script>
 	</body>
 </html>
