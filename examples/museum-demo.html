@@ -196,6 +196,14 @@
 			const ASPECT = WIDTH / HEIGHT;
 			const NEAR = 1;
 			const FAR = 800;
+			var moveForward = false;
+			var moveBackward = false;
+			var moveLeft = false;
+			var moveRight = false;
+			var raycaster;
+			var objects=[];
+			var prevTime = performance.now();
+			const velocity = new THREE.Vector3();
 
 			let camera, cubeCamera, scene, renderer;
 
@@ -212,10 +220,58 @@
 				controls.lock();
 			}, false);
 				
-			const controls = new PointerLockControls(camera, renderer.domElement)
+			const controls = new PointerLockControls(camera)
 			controls.addEventListener('lock', () => menuPanel.style.display = 'none');
 			controls.addEventListener('unlock', () => menuPanel.style.display = 'block');
+			scene.add(controls.getObject())
+			raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
+			
+			var onKeyDown = function ( event ) {
+					switch ( event.keyCode ) {
+						case 38: // up
+						case 87: // w
+							moveForward = true;
+							break;
+						case 37: // left
+						case 65: // a
+							moveLeft = true; 
+							break;
+						case 40: // down
+						case 83: // s
+							moveBackward = true;
+							break;
+						case 39: // right
+						case 68: // d
+							moveRight = true;
+							break;
+					}
+				};
+				var onKeyUp = function ( event ) {
+					switch( event.keyCode ) {
+						case 38: // up
+						case 87: // w
+							moveForward = false;
+							break;
+						case 37: // left
+						case 65: // a
+							moveLeft = false;
+							break;
+						case 40: // down
+						case 83: // s
+							moveBackward = false;
+							break;
+						case 39: // right
+						case 68: // d
+							moveRight = false;
+							break;
+					}
+				};
+				document.addEventListener( 'keydown', onKeyDown, false );
+				document.addEventListener( 'keyup', onKeyUp, false );
 
+
+
+			
 			function init() {
 				// renderer
 				renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -320,18 +376,12 @@
 				const paintingTex1 = loader.load("textures/scream.jpg", function () {
 					updateCubeMap();
 				});
-				const paintingTex2 = loader.load(
-					"textures/starry-night.jpg",
-					function () {
-						updateCubeMap();
-					}
-				);
-				const diffuseTex = loader.load(
-					"textures/brick_diffuse.jpg",
-					function () {
-						updateCubeMap();
-					}
-				);
+				const paintingTex2 = loader.load("textures/starry-night.jpg",function () {
+					updateCubeMap();
+				});
+				const diffuseTex = loader.load("textures/brick_diffuse.jpg",function () {
+					updateCubeMap();
+					});
 				const bumpTex = loader.load("textures/brick_bump.jpg", function () {
 					updateCubeMap();
 				});
@@ -383,11 +433,13 @@
 				plane1.position.set(40, 0, -49);
 				// plane.rotateY(Math.PI / 2);
 				scene.add(plane1);
+				objects.push(plane1);
 				//第二幅畫面板貼圖設定
 				const plane2 = new THREE.Mesh(paintingPanel2, wallMatPaintingMat2);
 				plane2.position.set(-25, 0, -49);
 				// plane.rotateY(Math.PI / 2);
 				scene.add(plane2);
+				objects.push(plane2);
 				// console.log("scene", scene);
 
 				const planeGeo = new THREE.PlaneGeometry(100, 100); // 全部牆的寬高
@@ -397,33 +449,39 @@
 				planeBack1.position.x = -50;
 				// planeBack1.rotateY(Math.PI / 2);
 				scene.add(planeBack1);
+				objects.push(planeBack1);
 
 				const planeBack2 = new THREE.Mesh(planeGeo, wallMat);
 				planeBack2.position.set(50, 0, -50);
 				// planeBack2.position.x = 50;
 				scene.add(planeBack2);
+				objects.push(planeBack2);
 
 				const planeFront1 = new THREE.Mesh(planeGeo, wallMat);
 				planeFront1.position.z = 50;
 				planeFront1.position.x = -50;
 				planeFront1.rotateY(Math.PI);
 				scene.add(planeFront1);
+				objects.push(planeFront1);
 
 				const planeFront2 = new THREE.Mesh(planeGeo, wallMat);
 				planeFront2.position.z = 50;
 				planeFront2.position.x = 50;
 				planeFront2.rotateY(Math.PI);
 				scene.add(planeFront2);
+				objects.push(planeFront2);
 
 				const planeRight = new THREE.Mesh(planeGeo, wallMat);
 				planeRight.position.x = 100;
 				planeRight.rotateY(-Math.PI / 2);
 				scene.add(planeRight);
+				objects.push(planeRight);
 
 				const planeLeft = new THREE.Mesh(planeGeo, wallMat);
 				planeLeft.position.x = -100;
 				planeLeft.rotateY(Math.PI / 2);
 				scene.add(planeLeft);
+				objects.push(planeLeft);
 
 				//lights
 				const width = 25;
@@ -493,31 +551,39 @@
 				render();
 			}
 
-			const onKeyDown = function (event) {
-				switch (event.key) {
-					case "w":
-						controls.moveForward(3);
-						break;
-					case "a":
-						controls.moveRight(-3);
-						break;
-					case "s":
-						controls.moveForward(-3);
-						break;
-					case "d":
-						controls.moveRight(3);
-						break;
-				}
-			};
-			document.addEventListener('keydown', onKeyDown, false);
-
-			// const stats = Stats()
-			// document.body.appendChild(stats.dom)
+			const stats = Stats()
+			document.body.appendChild(stats.dom)
 
 			function animate() {
 				requestAnimationFrame(animate)
+				raycaster.ray.origin.copy( controls.getObject().position );
+				raycaster.ray.origin.y -= 10;
+				var intersections = raycaster.intersectObjects( objects );
+				var isOnObject = intersections.length > 0;
+				var time = performance.now();
+				var delta = ( time - prevTime ) / 1000;
+					velocity.x -= velocity.x * 10.0 * delta;
+					velocity.z -= velocity.z * 10.0 * delta;
+					velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
+					if ( moveForward ) velocity.z -= 400.0 * delta;
+					if ( moveBackward ) velocity.z += 400.0 * delta;
+					if ( moveLeft ) velocity.x -= 400.0 * delta;
+					if ( moveRight ) velocity.x += 400.0 * delta;
+					if ( isOnObject === true ) {
+						console.log(velocity.y);
+						velocity.y = Math.max( 0, velocity.y );
+					}
+					controls.getObject().translateX( velocity.x * delta );
+					controls.getObject().translateY( velocity.y * delta );
+					controls.getObject().translateZ( velocity.z * delta );
+					if ( controls.getObject().position.y < 10 ) {
+						velocity.y = 0;
+						controls.getObject().position.y = 10;
+					}
+					prevTime = time;
+
 				render()
-				// stats.update()
+				stats.update()
 			};
 
 			function render() {
