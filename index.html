@@ -56,12 +56,18 @@
 		var moveBackward = false;
 		var moveLeft = false;
 		var moveRight = false;
-		var raycaster;
-		var objects = [];
 		var prevTime = performance.now();
 		const velocity = new THREE.Vector3();
 
+		var raycaster;
+		const pickableObjects = new Array();
+		let intersectedObject = new THREE.Object3D();
+		let originalMaterials = {}
+		let intersects = [];
+		const highlightedMaterial = new THREE.MeshBasicMaterial({ wireframe: true, color: 0x00ff00 })
+
 		draw();
+
 
 		function initRender() {
 			renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -72,6 +78,7 @@
 
 			document.body.appendChild(renderer.domElement);
 		}
+
 
 		function initCamera() {
 			camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
@@ -104,7 +111,6 @@
 			// const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
 			// scene.add( light );
 
-			//lights
 			const width = 25;
 			const height = 25;
 			const intensity = 30;
@@ -149,6 +155,7 @@
 			redRectLight.lookAt(0, 5, 0);
 			scene.add(redRectLight);
 		}
+
 
 		function initTestModel(){
 			//辅助工具 三角定位
@@ -239,55 +246,58 @@
 			//第一幅畫面板貼圖設定
 			const plane1 = new THREE.Mesh(paintingPanel1, wallMatPaintingMat1);
 			plane1.position.set(40, 0, -49);
+			plane1.name = "plane1";
+			pickableObjects.push(plane1)
+			originalMaterials[plane1.name] = plane1.material;
 			scene.add(plane1);
-			objects.push(plane1);
+			
+
 			//第二幅畫面板貼圖設定
 			const plane2 = new THREE.Mesh(paintingPanel2, wallMatPaintingMat2);
 			plane2.position.set(-25, 0, -49);
+			plane2.name = "plane2";
+			pickableObjects.push(plane2)
+			originalMaterials[plane2.name] = plane2.material;
 			scene.add(plane2);
-			objects.push(plane2);
+			console.log(plane2)
+			
 
-			const planeGeo = new THREE.PlaneGeometry(100, 100); // 全部牆的寬高
-
+			// 全部牆的寬高
+			const planeGeo = new THREE.PlaneGeometry(100, 100);
 			const planeBack1 = new THREE.Mesh(planeGeo, wallMat);
 			planeBack1.position.z = -50;
 			planeBack1.position.x = -50;
 			// planeBack1.rotateY(Math.PI / 2);
 			scene.add(planeBack1);
-			objects.push(planeBack1);
-
+			
 			const planeBack2 = new THREE.Mesh(planeGeo, wallMat);
 			planeBack2.position.set(50, 0, -50);
 			// planeBack2.position.x = 50;
 			scene.add(planeBack2);
-			objects.push(planeBack2);
 
 			const planeFront1 = new THREE.Mesh(planeGeo, wallMat);
 			planeFront1.position.z = 50;
 			planeFront1.position.x = -50;
 			planeFront1.rotateY(Math.PI);
 			scene.add(planeFront1);
-			objects.push(planeFront1);
 
 			const planeFront2 = new THREE.Mesh(planeGeo, wallMat);
 			planeFront2.position.z = 50;
 			planeFront2.position.x = 50;
 			planeFront2.rotateY(Math.PI);
 			scene.add(planeFront2);
-			objects.push(planeFront2);
 
 			const planeRight = new THREE.Mesh(planeGeo, wallMat);
 			planeRight.position.x = 100;
 			planeRight.rotateY(-Math.PI / 2);
 			scene.add(planeRight);
-			objects.push(planeRight);
 
 			const planeLeft = new THREE.Mesh(planeGeo, wallMat);
 			planeLeft.position.x = -100;
 			planeLeft.rotateY(Math.PI / 2);
 			scene.add(planeLeft);
-			objects.push(planeLeft);
 		}
+
 
 		function initModel() {
 			//辅助工具 三角定位
@@ -441,6 +451,31 @@
 			//#endregion
 		}
 
+
+		document.addEventListener('mousemove', onDocumentMouseMove, false);
+		function onDocumentMouseMove(event) {
+			raycaster = new THREE.Raycaster()
+			raycaster.setFromCamera({
+				x: (event.clientX / renderer.domElement.clientWidth) * 2 - 1,
+				y: -(event.clientY / renderer.domElement.clientHeight) * 2 + 1
+			}, camera);
+			intersects = raycaster.intersectObjects(pickableObjects, false);
+
+			if (intersects.length > 0) {
+				intersectedObject = intersects[0].object
+			} else {
+				intersectedObject = null
+			}
+			pickableObjects.forEach((o, i) => {
+				if (intersectedObject && intersectedObject.name === o.name) {
+					pickableObjects[i].material = highlightedMaterial
+				} else {
+					pickableObjects[i].material = originalMaterials[o.name]
+				}
+			})
+		}
+
+
 		function render() {
 			renderer.render(scene, camera);
 		}
@@ -455,9 +490,8 @@
 			
 			requestAnimationFrame(animate);
 			//更新控制器
-			render();
-
 			
+
 			var time = performance.now();
 			var delta = ( time - prevTime ) / 1000;
 			velocity.x -= velocity.x * 10.0 * delta;
@@ -471,7 +505,7 @@
 			controls.getObject().position.y = 0;
 			prevTime = time;
 
-
+			render();
 			//更新性能插件
 			stats.update();
 			// controls.update();
