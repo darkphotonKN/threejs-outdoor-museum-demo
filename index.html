@@ -9,14 +9,14 @@
 
 <body>
 	<div id="info">three.js - museum-demo.</div>
-	<div id="blocker">
+	<!-- <div id="blocker">
 		<div id="instructions">
 			<span style="font-size: 40px">點擊開始</span>
 			<br />
 			<br />
 			(W, A, S, D = 移動, 滑鼠移動 = 移動視角, ESC = 結束)
 		</div>
-	</div>
+	</div> -->
 
 	<script type="module">
 		import * as THREE from "../build/three.module.js";
@@ -103,57 +103,57 @@
 			// light.position.set(100, 100, 100);//光源位置
 			// scene.add(light);//光源添加到场景中
 
-			// light = new THREE.PointLight(0xffffff);
-			// light.position.set(500, 500, 500);
-			// light.castShadow = true;
-			// scene.add(light);
+			light = new THREE.PointLight(0xffffff);
+			light.position.set(500, 500, 500);
+			light.castShadow = true;
+			scene.add(light);
 
 			// const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
 			// scene.add( light );
 
-			const width = 25;
-			const height = 25;
-			const intensity = 30;
-			RectAreaLightUniformsLib.init();
+			// const width = 25;
+			// const height = 25;
+			// const intensity = 30;
+			// RectAreaLightUniformsLib.init();
 
-			// let pointLight2 = new THREE.PointLight(0xffffff);
-			// pointLight2.position.set(0, 50, 0);
-			// scene.add(pointLight2);
+			// // let pointLight2 = new THREE.PointLight(0xffffff);
+			// // pointLight2.position.set(0, 50, 0);
+			// // scene.add(pointLight2);
 
-			let pointLight = new THREE.RectAreaLight(
-				0xffffff,
-				intensity,
-				width,
-				height
-			);
-			pointLight.position.set(99, 5, 0);
-			pointLight.lookAt(0, 5, 0);
-			scene.add(pointLight);
-			// const pointLightHelper = new RectAreaLightHelper(pointLight);
-			// pointLight.add(pointLightHelper);
+			// let pointLight = new THREE.RectAreaLight(
+			// 	0xffffff,
+			// 	intensity,
+			// 	width,
+			// 	height
+			// );
+			// pointLight.position.set(99, 5, 0);
+			// pointLight.lookAt(0, 5, 0);
+			// scene.add(pointLight);
+			// // const pointLightHelper = new RectAreaLightHelper(pointLight);
+			// // pointLight.add(pointLightHelper);
 
-			const blueRectLight = new THREE.RectAreaLight(
-				0xfdf4dc,
-				intensity,
-				width,
-				height
-			);
-			blueRectLight.position.set(99, 5, 0);
-			blueRectLight.lookAt(0, 5, 0);
-			// scene.add(blueRectLight);
+			// const blueRectLight = new THREE.RectAreaLight(
+			// 	0xfdf4dc,
+			// 	intensity,
+			// 	width,
+			// 	height
+			// );
+			// blueRectLight.position.set(99, 5, 0);
+			// blueRectLight.lookAt(0, 5, 0);
+			// // scene.add(blueRectLight);
 
-			// const blueRectLightHelper = new RectAreaLightHelper(blueRectLight);
-			// blueRectLight.add(blueRectLightHelper);
+			// // const blueRectLightHelper = new RectAreaLightHelper(blueRectLight);
+			// // blueRectLight.add(blueRectLightHelper);
 
-			const redRectLight = new THREE.RectAreaLight(
-				0xfdf4dc,
-				intensity,
-				width,
-				height
-			);
-			redRectLight.position.set(-99, 5, 0);
-			redRectLight.lookAt(0, 5, 0);
-			scene.add(redRectLight);
+			// const redRectLight = new THREE.RectAreaLight(
+			// 	0xfdf4dc,
+			// 	intensity,
+			// 	width,
+			// 	height
+			// );
+			// redRectLight.position.set(-99, 5, 0);
+			// redRectLight.lookAt(0, 5, 0);
+			// scene.add(redRectLight);
 		}
 
 
@@ -329,8 +329,9 @@
 			//#region GLTF loader
 			//建立GLTF檔案載入器
 			// const loader = new GLTFLoader();
-			// loader.load( 'path/to/model.glb', function ( gltf ) {
+			// loader.load( './gltf/new0616.gltf', function ( gltf ) {
 			// 	scene.add(gltf.scene);
+			// 	setModelPosition(gltf.scene);
 			// }, undefined, function ( error ) {
 			// 	console.error( error );
 			// } );
@@ -338,15 +339,15 @@
 			
 			//#region dae loader
 			//建立dae檔案載入器
-			// var loader = new ColladaLoader();
-			// loader.load('dae/台科建築畢業展覽.dae', function (collada) {
-			// 	const dae = collada.scene;
-			// 	console.log("x:" + dae.position.x);
-			// 	console.log("y:" + dae.position.y);
-			// 	console.log("z:" + dae.position.z);
-			// 	scene.add(collada.scene);
-			// 	setModelPosition(dae)
-			// });
+			var loader = new ColladaLoader();
+			loader.load('dae/台科建築畢業展覽0616.dae', function (collada) {
+				const dae = collada.scene;
+				console.log("x:" + dae.position.x);
+				console.log("y:" + dae.position.y);
+				console.log("z:" + dae.position.z);
+				scene.add(collada.scene);
+				setModelPosition(dae)
+			});
 			//#endregion
 		}
 
@@ -382,98 +383,98 @@
 		function initControls() {
 
 			//#region  要用上帝視角用這個
-			// controls = new OrbitControls(camera, renderer.domElement );
-			// controls.enableDamping = true // 啟用阻尼效果
-			// controls.dampingFactor = 0.25 // 阻尼系數
-			// //相机与模型最小距离，模型看上去大
-            // controls.minDistance = 1;
-            // //相机与模型最大距离，模型看上去小
-            // controls.maxDistance = 1000;
+			controls = new OrbitControls(camera, renderer.domElement );
+			controls.enableDamping = true // 啟用阻尼效果
+			controls.dampingFactor = 0.25 // 阻尼系數
+			//相机与模型最小距离，模型看上去大
+            controls.minDistance = 1;
+            //相机与模型最大距离，模型看上去小
+            controls.maxDistance = 1000;
 			//#endregion
 
 			//#region 要走路用這個
-			const blocker = document.getElementById('blocker');
-			blocker.addEventListener('click', function () {
-				controls.lock();
-			}, false);
+			// const blocker = document.getElementById('blocker');
+			// blocker.addEventListener('click', function () {
+			// 	controls.lock();
+			// }, false);
 
-			controls = new PointerLockControls(camera);
-			controls.addEventListener("lock", () => (blocker.style.display = "none"));
-			controls.addEventListener("unlock", () => (blocker.style.display = "block"));
-			scene.add(controls.getObject());
-			raycaster = new THREE.Raycaster(
-				new THREE.Vector3(),
-				new THREE.Vector3(0, 0, 0),0,10
-			);
+			// controls = new PointerLockControls(camera);
+			// controls.addEventListener("lock", () => (blocker.style.display = "none"));
+			// controls.addEventListener("unlock", () => (blocker.style.display = "block"));
+			// scene.add(controls.getObject());
+			// raycaster = new THREE.Raycaster(
+			// 	new THREE.Vector3(),
+			// 	new THREE.Vector3(0, 0, 0),0,10
+			// );
 
-			var onKeyDown = function (event) {
-			switch (event.keyCode) {
-				case 38: // up
-				case 87: // w
-				moveForward = true;
-				break;
-				case 37: // left
-				case 65: // a
-				moveLeft = true;
-				break;
-				case 40: // down
-				case 83: // s
-				moveBackward = true;
-				break;
-				case 39: // right
-				case 68: // d
-				moveRight = true;
-				break;
-			}
-			};
-			var onKeyUp = function (event) {
-			switch (event.keyCode) {
-				case 38: // up
-				case 87: // w
-				moveForward = false;
-				break;
-				case 37: // left
-				case 65: // a
-				moveLeft = false;
-				break;
-				case 40: // down
-				case 83: // s
-				moveBackward = false;
-				break;
-				case 39: // right
-				case 68: // d
-				moveRight = false;
-				break;
-			}
-			};
-			document.addEventListener("keydown", onKeyDown, false);
-			document.addEventListener("keyup", onKeyUp, false);
+			// var onKeyDown = function (event) {
+			// switch (event.keyCode) {
+			// 	case 38: // up
+			// 	case 87: // w
+			// 	moveForward = true;
+			// 	break;
+			// 	case 37: // left
+			// 	case 65: // a
+			// 	moveLeft = true;
+			// 	break;
+			// 	case 40: // down
+			// 	case 83: // s
+			// 	moveBackward = true;
+			// 	break;
+			// 	case 39: // right
+			// 	case 68: // d
+			// 	moveRight = true;
+			// 	break;
+			// }
+			// };
+			// var onKeyUp = function (event) {
+			// switch (event.keyCode) {
+			// 	case 38: // up
+			// 	case 87: // w
+			// 	moveForward = false;
+			// 	break;
+			// 	case 37: // left
+			// 	case 65: // a
+			// 	moveLeft = false;
+			// 	break;
+			// 	case 40: // down
+			// 	case 83: // s
+			// 	moveBackward = false;
+			// 	break;
+			// 	case 39: // right
+			// 	case 68: // d
+			// 	moveRight = false;
+			// 	break;
+			// }
+			// };
+			// document.addEventListener("keydown", onKeyDown, false);
+			// document.addEventListener("keyup", onKeyUp, false);
 			//#endregion
 		}
 
 
-		document.addEventListener('mousemove', onDocumentMouseMove, false);
-		function onDocumentMouseMove(event) {
-			raycaster = new THREE.Raycaster()
-			raycaster.setFromCamera({
-				x: (event.clientX / renderer.domElement.clientWidth) * 2 - 1,
-				y: -(event.clientY / renderer.domElement.clientHeight) * 2 + 1
-			}, camera);
-			intersects = raycaster.intersectObjects(pickableObjects, false);
+		// document.addEventListener('mousemove', onDocumentMouseMove, false);
+		// function onDocumentMouseMove(event) {
+		// 	raycaster = new THREE.Raycaster()
+		// 	raycaster.setFromCamera({
+		// 		x: (event.clientX / renderer.domElement.clientWidth) * 2 - 1,
+		// 		y: -(event.clientY / renderer.domElement.clientHeight) * 2 + 1
+		// 	}, camera);
+		// 	intersects = raycaster.intersectObjects(pickableObjects, false);
 
-			if (intersects.length > 0) {
-				intersectedObject = intersects[0].object
-			} else {
-				intersectedObject = null
-			}
-			pickableObjects.forEach((o, i) => {
-				if (intersectedObject && intersectedObject.name === o.name) {
-					pickableObjects[i].material = highlightedMaterial
-				} else {
-					pickableObjects[i].material = originalMaterials[o.name]
-				}
-			})
-		}
+		// 	if (intersects.length > 0) {
+		// 		intersectedObject = intersects[0].object
+		// 	} else {
+		// 		intersectedObject = null
+		// 	}
+		// 	pickableObjects.forEach((o, i) => {
+		// 		if (intersectedObject && intersectedObject.name === o.name) {
+		// 			pickableObjects[i].material = highlightedMaterial
+		// 		} else {
+		// 			pickableObjects[i].material = originalMaterials[o.name]
+		// 		}
+		// 	})
+		// }
 
 
 		function render() {
@@ -492,23 +493,23 @@
 			//更新控制器
 			
 
-			var time = performance.now();
-			var delta = ( time - prevTime ) / 1000;
-			velocity.x -= velocity.x * 10.0 * delta;
-			velocity.z -= velocity.z * 10.0 * delta;
-			if ( moveForward ) velocity.z -= 300.0 * delta;
-			if ( moveBackward ) velocity.z += 300.0 * delta;
-			if ( moveLeft ) velocity.x -= 300.0 * delta;
-			if ( moveRight ) velocity.x += 300.0 * delta;
-			controls.getObject().translateX( velocity.x * delta );
-			controls.getObject().translateZ( velocity.z * delta );
-			controls.getObject().position.y = 0;
-			prevTime = time;
+			// var time = performance.now();
+			// var delta = ( time - prevTime ) / 1000;
+			// velocity.x -= velocity.x * 10.0 * delta;
+			// velocity.z -= velocity.z * 10.0 * delta;
+			// if ( moveForward ) velocity.z -= 300.0 * delta;
+			// if ( moveBackward ) velocity.z += 300.0 * delta;
+			// if ( moveLeft ) velocity.x -= 300.0 * delta;
+			// if ( moveRight ) velocity.x += 300.0 * delta;
+			// controls.getObject().translateX( velocity.x * delta );
+			// controls.getObject().translateZ( velocity.z * delta );
+			// controls.getObject().position.y = 0;
+			// prevTime = time;
 
 			render();
 			//更新性能插件
 			stats.update();
-			// controls.update();
+			controls.update();
 		}
 
 		function draw() {
@@ -517,8 +518,8 @@
 			initCamera();
 			initGUI();
 			initLight();
-			// initModel();
-			initTestModel();
+			initModel();
+			// initTestModel();
 			initControls();
 			initStats();
 			animate();
