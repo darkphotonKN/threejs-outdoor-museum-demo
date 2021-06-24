@@ -83,7 +83,7 @@ a, button, input, select {
 	padding: 10px;
 }
 
-#menuPanel {
+#blocker {
 	position: absolute;
 	background-color: rgba(255, 255, 255, 0.5);
 	top: 0px;
@@ -92,7 +92,7 @@ a, button, input, select {
 	height: 100%;
 }
 
-#startButton {
+#instructions {
 	height: 50px;
 	width: 200px;
 	margin: -25px -100px;
