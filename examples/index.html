@@ -71,7 +71,8 @@
 
 		function initCamera() {
 			camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
-			camera.position.set(-1000, -500, -90 );
+			camera.position.set(-2000, 0, -90 );
+			camera.position.y = 500
 			camera.lookAt(scene.position);
 		}
 
@@ -211,12 +212,11 @@
 			//建立dae檔案載入器
 			var loader = new ColladaLoader();
 			loader.load('./public/dae/台科建築畢業展覽0616.dae', function (collada) {
-				const dae = collada.scene;
+				const dae = collada.scene;	
 				dae.scale.set(0.7,0.7,0.7);
+				dae.position.y = 105;
 				setModelPosition(dae);
 				scene.add(dae);
-				
-				
 			});
 			//#endregion
 
@@ -231,7 +231,7 @@
 			const groundMaterial = new THREE.MeshLambertMaterial( { map: groundTexture } );
 
 			let mesh = new THREE.Mesh( new THREE.PlaneGeometry( 20000, 20000 ), groundMaterial );
-			mesh.position.y = -150;
+			mesh.position.y = -50;
 			mesh.rotation.x = - Math.PI / 2;
 			mesh.receiveShadow = true;
 			scene.add( mesh );
@@ -277,8 +277,8 @@
 			controls = new PointerLockControls(camera);
 			controls.addEventListener("lock", () => (blocker.style.display = "none"));
 			controls.addEventListener("unlock", () => (blocker.style.display = "block"));
+			console.log(controls)
 			scene.add(controls.getObject());
-
 			var onKeyDown = function (event) {
 			switch (event.keyCode) {
 				case 38: // up
