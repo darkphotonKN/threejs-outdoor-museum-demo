@@ -38,18 +38,7 @@
 		gui, 
 		light, 
 		stats, 
-		controls,
-		cubeCamera;
-
-		let groundPlane, wallMat, wallMatPaintingMat1, wallMatPaintingMat2;
-		let geometry;
-		let cube;
-
-		// camera
-		const VIEW_ANGLE = 45;
-		const ASPECT = window.innerWidth / window.innerHeight;
-		const NEAR = 1;
-		const FAR = 1000;
+		controls;
 
 		//move
 		var moveForward = false;
@@ -59,6 +48,7 @@
 		var prevTime = performance.now();
 		const velocity = new THREE.Vector3();
 
+		//raycast
 		var raycaster;
 		const pickableObjects = new Array();
 		let intersectedObject = new THREE.Object3D();
@@ -68,29 +58,31 @@
 
 		draw();
 
-
 		function initRender() {
 			renderer = new THREE.WebGLRenderer({ antialias: true });
-			renderer.setPixelRatio(window.devicePixelRatio);
-			renderer.setSize(window.innerWidth, window.innerHeight); // 場景大小
-			renderer.setClearColor(0x000000, 1.0); // 預設背景顏色
-			renderer.shadowMap.enable = true // 陰影效果
+			renderer.setPixelRatio( window.devicePixelRatio );
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			renderer.outputEncoding = THREE.sRGBEncoding;
+			renderer.shadowMap.enabled = true;
 
 			document.body.appendChild(renderer.domElement);
 		}
 
 
 		function initCamera() {
-			camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
-			camera.position.set(200, 0, 0);
+			camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 1, 10000 );
+			camera.position.set(-2500, 0, -90 );
 			camera.lookAt(scene.position);
-			// camera.lookAt(new THREE.Vector3(-10, 10, 10));
 		}
+
 
 		function initScene() {
 			scene = new THREE.Scene();
+			scene.background = new THREE.Color( 0xcce0ff );
+			scene.fog = new THREE.Fog( 0xcce0ff, 500, 10000 );
 		}
 
+		
 		function initGUI(){
 			// gui controls
 			const gui = new GUI();
@@ -99,39 +91,61 @@
 
 		function initLight() {
 			scene.add(new THREE.AmbientLight(0x444444));
-			// light = new THREE.DirectionalLight(0xffffff);//光源颜色
-			// light.position.set(100, 100, 100);//光源位置
-			// scene.add(light);//光源添加到场景中
 
-			light = new THREE.PointLight(0xffffff);
-			light.position.set(500, 500, 500);
-			light.castShadow = true;
-			scene.add(light);
+			//#region DirectionalLight
+			const directionalLight = new THREE.DirectionalLight( 0xdfebff, 1 );
+			directionalLight.position.set( 50, 200, 100 );
+			directionalLight.position.multiplyScalar( 1.3 );
 
-			// const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
-			// scene.add( light );
+			directionalLight.castShadow = true;
 
+			directionalLight.shadow.mapSize.width = 1024;
+			directionalLight.shadow.mapSize.height = 1024;
+
+			const d = 300;
+
+			directionalLight.shadow.camera.left = - d;
+			directionalLight.shadow.camera.right = d;
+			directionalLight.shadow.camera.top = d;
+			directionalLight.shadow.camera.bottom = - d;
+
+			directionalLight.shadow.camera.far = 1000;
+
+			scene.add(directionalLight);
+			//#endregion
+
+			//#region HemisphereLight
+			// const hemisphereLight = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
+			// scene.add(hemisphereLight);
+			//#endregion
+
+			//#region RectAreaLightUniformsLib
 			// const width = 25;
 			// const height = 25;
 			// const intensity = 30;
 			// RectAreaLightUniformsLib.init();
+			//#endregion
 
-			// // let pointLight2 = new THREE.PointLight(0xffffff);
-			// // pointLight2.position.set(0, 50, 0);
-			// // scene.add(pointLight2);
+			//#region PointLight
+			// let pointLight = new THREE.PointLight(0xffffff);
+			// pointLight.position.set(0, 50, 0);
+			// pointLight.castShadow = true;
+			// scene.add(pointLight2);
+			//#endregion
 
-			// let pointLight = new THREE.RectAreaLight(
+			//#region RectAreaLight
+			// let rectAreaLight = new THREE.RectAreaLight(
 			// 	0xffffff,
 			// 	intensity,
 			// 	width,
 			// 	height
 			// );
-			// pointLight.position.set(99, 5, 0);
-			// pointLight.lookAt(0, 5, 0);
-			// scene.add(pointLight);
-			// // const pointLightHelper = new RectAreaLightHelper(pointLight);
-			// // pointLight.add(pointLightHelper);
-
+			// rectAreaLight.position.set(99, 5, 0);
+			// rectAreaLight.lookAt(0, 5, 0);
+			// scene.add(rectAreaLight);
+			//#endregion
+			
+			//#region RectAreaLight
 			// const blueRectLight = new THREE.RectAreaLight(
 			// 	0xfdf4dc,
 			// 	intensity,
@@ -140,10 +154,7 @@
 			// );
 			// blueRectLight.position.set(99, 5, 0);
 			// blueRectLight.lookAt(0, 5, 0);
-			// // scene.add(blueRectLight);
-
-			// // const blueRectLightHelper = new RectAreaLightHelper(blueRectLight);
-			// // blueRectLight.add(blueRectLightHelper);
+			// scene.add(blueRectLight);
 
 			// const redRectLight = new THREE.RectAreaLight(
 			// 	0xfdf4dc,
@@ -154,9 +165,13 @@
 			// redRectLight.position.set(-99, 5, 0);
 			// redRectLight.lookAt(0, 5, 0);
 			// scene.add(redRectLight);
+			//#endregion
 		}
 
 
+		let groundPlane, wallMat, wallMatPaintingMat1, wallMatPaintingMat2;
+		let geometry;
+		let cubeCamera, cube;
 		function initTestModel(){
 			//辅助工具 三角定位
 			// var helper = new THREE.AxesHelper(100);
@@ -298,59 +313,6 @@
 			scene.add(planeLeft);
 		}
 
-
-		function initModel() {
-			//辅助工具 三角定位
-			var helper = new THREE.AxesHelper(100);
-			scene.add(helper);
-
-			//#region obj mtl loader
-			//建立mtl檔案載入器
-			// var mtlLoader = new MTLLoader();
-			// //載入mtl檔案，mtl檔案中引用的圖片路徑需要改為相對路徑
-			// mtlLoader.load('obj/台科建築畢業展覽.mtl', function(material) {
-			// 	//建立obj檔案載入器
-			// 	var objLoader = new OBJLoader();
-			// 	//設定當前載入的紋理
-			// 	objLoader.setMaterials(material);
-			// 	//載入obj檔案
-			// 	objLoader.load('obj/台科建築畢業展覽.obj', function(object) {
-			// 		object.scale.set(0.2, 0.2, 0.2);
-            //         object.traverse(function (child) {
-            //             child.castShadow = true;
-            //             child.receiveShadow = true;
-            //             objects.push(child);
-            //         }, {normalizeRGB: true});
-			// 		scene.add(object);
-			// 	});
-			// });
-			//#endregion
-
-			//#region GLTF loader
-			//建立GLTF檔案載入器
-			// const loader = new GLTFLoader();
-			// loader.load( './gltf/new0616.gltf', function ( gltf ) {
-			// 	scene.add(gltf.scene);
-			// 	setModelPosition(gltf.scene);
-			// }, undefined, function ( error ) {
-			// 	console.error( error );
-			// } );
-			//#endregion
-			
-			//#region dae loader
-			//建立dae檔案載入器
-			var loader = new ColladaLoader();
-			loader.load('dae/台科建築畢業展覽0616.dae', function (collada) {
-				const dae = collada.scene;
-				console.log("x:" + dae.position.x);
-				console.log("y:" + dae.position.y);
-				console.log("z:" + dae.position.z);
-				scene.add(collada.scene);
-				setModelPosition(dae)
-			});
-			//#endregion
-		}
-
 		function updateCubeMap() {
 			//disable specular highlights on walls in the environment map
 			wallMat.roughness = 1;
@@ -364,122 +326,129 @@
 			render();
 		}
 
-		function setModelPosition(object) { 
-			object.updateMatrixWorld();
-			const box = new THREE.Box3().setFromObject(object);
-			const boxSize = box.getSize();
-			const center = box.getCenter(new THREE.Vector3());
-			object.position.x += object.position.x - center.x;
-			object.position.y += object.position.y - center.y; 
-			object.position.z += object.position.z - center.z;
-		}
-
-
 		function initStats() {
 			stats = new Stats();
 			document.body.appendChild(stats.dom);
 		}
 
+
 		function initControls() {
 
-			//#region  要用上帝視角用這個
-			controls = new OrbitControls(camera, renderer.domElement );
-			controls.enableDamping = true // 啟用阻尼效果
-			controls.dampingFactor = 0.25 // 阻尼系數
-			//相机与模型最小距离，模型看上去大
-            controls.minDistance = 1;
-            //相机与模型最大距离，模型看上去小
-            controls.maxDistance = 1000;
+			//#region  OrbitControls 上帝視角
+			// controls = new OrbitControls(camera, renderer.domElement );
+			// controls.enableDamping = true // 啟用阻尼效果
+			// controls.dampingFactor = 0.25 // 阻尼系數
+			// controls.maxPolarAngle = Math.PI * 0.5;
+			// controls.minDistance = 1000;
+			// controls.maxDistance = 5000;
+
 			//#endregion
 
-			//#region 要走路用這個
-			// const blocker = document.getElementById('blocker');
-			// blocker.addEventListener('click', function () {
-			// 	controls.lock();
-			// }, false);
+			//#region PointerLockControls 走路模式
+			const blocker = document.getElementById('blocker');
+			blocker.addEventListener('click', function () {
+				controls.lock();
+			}, false);
 
-			// controls = new PointerLockControls(camera);
-			// controls.addEventListener("lock", () => (blocker.style.display = "none"));
-			// controls.addEventListener("unlock", () => (blocker.style.display = "block"));
-			// scene.add(controls.getObject());
-			// raycaster = new THREE.Raycaster(
-			// 	new THREE.Vector3(),
-			// 	new THREE.Vector3(0, 0, 0),0,10
-			// );
+			controls = new PointerLockControls(camera);
+			controls.addEventListener("lock", () => (blocker.style.display = "none"));
+			controls.addEventListener("unlock", () => (blocker.style.display = "block"));
+			scene.add(controls.getObject());
+			raycaster = new THREE.Raycaster(
+				new THREE.Vector3(),
+				new THREE.Vector3(0, 0, 0),0,10
+			);
 
-			// var onKeyDown = function (event) {
-			// switch (event.keyCode) {
-			// 	case 38: // up
-			// 	case 87: // w
-			// 	moveForward = true;
-			// 	break;
-			// 	case 37: // left
-			// 	case 65: // a
-			// 	moveLeft = true;
-			// 	break;
-			// 	case 40: // down
-			// 	case 83: // s
-			// 	moveBackward = true;
-			// 	break;
-			// 	case 39: // right
-			// 	case 68: // d
-			// 	moveRight = true;
-			// 	break;
-			// }
-			// };
-			// var onKeyUp = function (event) {
-			// switch (event.keyCode) {
-			// 	case 38: // up
-			// 	case 87: // w
-			// 	moveForward = false;
-			// 	break;
-			// 	case 37: // left
-			// 	case 65: // a
-			// 	moveLeft = false;
-			// 	break;
-			// 	case 40: // down
-			// 	case 83: // s
-			// 	moveBackward = false;
-			// 	break;
-			// 	case 39: // right
-			// 	case 68: // d
-			// 	moveRight = false;
-			// 	break;
-			// }
-			// };
-			// document.addEventListener("keydown", onKeyDown, false);
-			// document.addEventListener("keyup", onKeyUp, false);
+			var onKeyDown = function (event) {
+			switch (event.keyCode) {
+				case 38: // up
+				case 87: // w
+				moveForward = true;
+				break;
+				case 37: // left
+				case 65: // a
+				moveLeft = true;
+				break;
+				case 40: // down
+				case 83: // s
+				moveBackward = true;
+				break;
+				case 39: // right
+				case 68: // d
+				moveRight = true;
+				break;
+			}
+			};
+			var onKeyUp = function (event) {
+			switch (event.keyCode) {
+				case 38: // up
+				case 87: // w
+				moveForward = false;
+				break;
+				case 37: // left
+				case 65: // a
+				moveLeft = false;
+				break;
+				case 40: // down
+				case 83: // s
+				moveBackward = false;
+				break;
+				case 39: // right
+				case 68: // d
+				moveRight = false;
+				break;
+			}
+			};
+			document.addEventListener("keydown", onKeyDown, false);
+			document.addEventListener("keyup", onKeyUp, false);
 			//#endregion
 		}
 
 
-		// document.addEventListener('mousemove', onDocumentMouseMove, false);
-		// function onDocumentMouseMove(event) {
-		// 	raycaster = new THREE.Raycaster()
-		// 	raycaster.setFromCamera({
-		// 		x: (event.clientX / renderer.domElement.clientWidth) * 2 - 1,
-		// 		y: -(event.clientY / renderer.domElement.clientHeight) * 2 + 1
-		// 	}, camera);
-		// 	intersects = raycaster.intersectObjects(pickableObjects, false);
+		function initMove(){
+			var time = performance.now();
+			var delta = ( time - prevTime ) / 1000;
+			velocity.x -= velocity.x * 10.0 * delta;
+			velocity.z -= velocity.z * 10.0 * delta;
+			if ( moveForward ) velocity.z -= 300.0 * delta;
+			if ( moveBackward ) velocity.z += 300.0 * delta;
+			if ( moveLeft ) velocity.x -= 300.0 * delta;
+			if ( moveRight ) velocity.x += 300.0 * delta;
+			controls.getObject().translateX( velocity.x * delta );
+			controls.getObject().translateZ( velocity.z * delta );
+			controls.getObject().position.y = 0;
+			prevTime = time;
+		}
 
-		// 	if (intersects.length > 0) {
-		// 		intersectedObject = intersects[0].object
-		// 	} else {
-		// 		intersectedObject = null
-		// 	}
-		// 	pickableObjects.forEach((o, i) => {
-		// 		if (intersectedObject && intersectedObject.name === o.name) {
-		// 			pickableObjects[i].material = highlightedMaterial
-		// 		} else {
-		// 			pickableObjects[i].material = originalMaterials[o.name]
-		// 		}
-		// 	})
-		// }
+
+		document.addEventListener('mousemove', onDocumentMouseMove, false);
+		function onDocumentMouseMove(event) {
+			raycaster = new THREE.Raycaster()
+			raycaster.setFromCamera({
+				x: (event.clientX / renderer.domElement.clientWidth) * 2 - 1,
+				y: -(event.clientY / renderer.domElement.clientHeight) * 2 + 1
+			}, camera);
+			intersects = raycaster.intersectObjects(pickableObjects, false);
+
+			if (intersects.length > 0) {
+				intersectedObject = intersects[0].object
+			} else {
+				intersectedObject = null
+			}
+			pickableObjects.forEach((o, i) => {
+				if (intersectedObject && intersectedObject.name === o.name) {
+					pickableObjects[i].material = highlightedMaterial
+				} else {
+					pickableObjects[i].material = originalMaterials[o.name]
+				}
+			})
+		}
 
 
 		function render() {
 			renderer.render(scene, camera);
 		}
+
 
 		function onWindowResize(){
     		camera.aspect = window.innerWidth / window.innerHeight;
@@ -487,30 +456,22 @@
     		renderer.setSize(window.innerWidth, window.innerHeight);
 		}
 
+
 		function animate() {
-			
 			requestAnimationFrame(animate);
+
+			//移動設定
+			initMove();
+
 			//更新控制器
-			
+			// controls.update();
 
-			// var time = performance.now();
-			// var delta = ( time - prevTime ) / 1000;
-			// velocity.x -= velocity.x * 10.0 * delta;
-			// velocity.z -= velocity.z * 10.0 * delta;
-			// if ( moveForward ) velocity.z -= 300.0 * delta;
-			// if ( moveBackward ) velocity.z += 300.0 * delta;
-			// if ( moveLeft ) velocity.x -= 300.0 * delta;
-			// if ( moveRight ) velocity.x += 300.0 * delta;
-			// controls.getObject().translateX( velocity.x * delta );
-			// controls.getObject().translateZ( velocity.z * delta );
-			// controls.getObject().position.y = 0;
-			// prevTime = time;
-
-			render();
 			//更新性能插件
 			stats.update();
-			controls.update();
+
+			render();
 		}
+
 
 		function draw() {
 			initRender();
@@ -518,8 +479,7 @@
 			initCamera();
 			initGUI();
 			initLight();
-			initModel();
-			// initTestModel();
+			initTestModel();
 			initControls();
 			initStats();
 			animate();
